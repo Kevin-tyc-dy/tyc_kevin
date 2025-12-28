@@ -94,7 +94,9 @@
     </style>
 </head>
 <body>
-
+<audio id="dice-sound" src="dice.mp3"></audio>
+<audio id="success-sound" src="success.mp3"></audio>
+<audio id="fail-sound" src="fail.mp3"></audio>
 <div id="setup-overlay">
     <div class="setup-box">
         <h1 style="font-size: 36px; margin-bottom: 10px;">🏫 社會節慶大富翁</h1>
@@ -335,6 +337,13 @@
     // 5. 擲骰子
     function rollDice() {
         if (isMoving) return;
+        const diceSound = document.getElementById('dice-sound');
+        if (diceSound) {
+            diceSound.currentTime = 0; // 每次播放前歸零，確保連點時也能重播
+            diceSound.play().catch(error => {
+                console.log("播放音效失敗 (請確認瀏覽器權限或檔案是否存在):", error);
+            });
+        }
         isMoving = true;
         document.getElementById('roll-btn').disabled = true;
         
@@ -342,7 +351,7 @@
         const diceChars = ['⚀','⚁','⚂','⚃','⚄','⚅'];
         const inv = setInterval(() => {
             document.getElementById('dice-display').innerText = diceChars[Math.floor(Math.random()*6)];
-            if (++count > 12) {
+            if (++count > 24) {
                 clearInterval(inv);
                 const steps = Math.floor(Math.random()*6) + 1;
                 document.getElementById('dice-display').innerText = diceChars[steps-1];
@@ -385,8 +394,24 @@
     // 8. 完成任務
     function completeTask(success) {
         if (success) {
+            // --- 播放成功音效 ---
+            const sSound = document.getElementById('success-sound');
+            if (sSound) {
+                sSound.currentTime = 0;
+                sSound.play().catch(e => console.log(e));
+            }
+            // ------------------------
             players[currentPlayerIndex].score += currentTaskScore;
+        } else {
+            // --- 播放失敗音效 ---
+            const fSound = document.getElementById('fail-sound');
+            if (fSound) {
+                fSound.currentTime = 0;
+                fSound.play().catch(e => console.log(e));
+            }
+            // ------------------------
         }
+        
         document.getElementById('task-modal').style.display = 'none';
         
         if (players[currentPlayerIndex].score >= 50) {
