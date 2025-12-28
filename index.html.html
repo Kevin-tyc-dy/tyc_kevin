@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>臺灣節慶大富翁</title>
+    <style>
+        :root { --board-bg: #f0f8ff; --tile-bg: #ffffff; }
+        body { font-family: "Microsoft JhengHei", sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; background-color: #e0e0e0; }
+        
+        /* 遊戲主區域 */
+        .game-area { flex: 3; display: flex; justify-content: center; align-items: center; background-color: #87CEEB; }
+        
+        .board { 
+            display: grid; 
+            grid-template-columns: repeat(6, 1fr); 
+            grid-template-rows: repeat(6, 1fr); 
+            gap: 5px; 
+            width: 90vh; 
+            height: 90vh; 
+            background-color: #333; 
+            border: 5px solid #555; 
+            box-sizing: border-box; 
+        }
+
+        /* 棋格樣式 */
+        .tile { 
+            background-color: var(--tile-bg); 
+            border: 1px solid #ccc; 
+            position: relative; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between;
+            align-items: center; 
+            font-size: 14px; 
+            text-align: center; 
+            padding: 0; 
+            font-weight: bold;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            overflow: hidden;
+        }
+
+        .tile-name {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            width: 100%;
+            padding: 5px 0;
+            font-size: 14px;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        .tile.corner { background-color: #ffcccb; }
+        .tile.festival { background-color: #e6ffcc; }
+        .tile.chance { background-color: #fff9c4; }
+
+        /* 中央區域：骰子與目前玩家 */
+        .center-area { grid-column: 2 / span 4; grid-row: 2 / span 4; background-color: rgba(255, 255, 255, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; border-radius: 20px; }
+        
+        #current-player-display {
+            font-size: 48px; 
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        #dice-display { font-size: 80px; margin: 20px; transition: transform 0.2s; }
+        button#roll-btn { background-color: #e74c3c; color: white; border: none; padding: 20px 40px; font-size: 28px; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        button#roll-btn:disabled { background-color: #95a5a6; cursor: not-allowed; }
+
+        .token-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; width: 100%; min-height: 40px; }
+        
+        /* 側邊欄與計分板 */
+        .sidebar { flex: 1; background-color: #2c3e50; color: white; padding: 20px; display: flex; flex-direction: column; }
+        #scoreboard { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+        .bar-container { position: relative; width: 100%; background: rgba(255, 255, 255, 0.1); border-radius: 20px; height: 35px; display: flex; align-items: center; overflow: visible; }
+        .bar-fill { height: 100%; border-radius: 20px; transition: width 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; min-width: 35px; }
+        .bar-avatar { position: absolute; right: 2px; top: -10px; font-size: 24px; }
+        .bar-score { position: absolute; right: 10px; color: #ffd700; font-weight: bold; }
+        .active-row { box-shadow: 0 0 15px #ffd700; border: 2px solid #ffd700; background: rgba(255, 215, 0, 0.2); }
+
+        /* 彈窗樣式 */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; }
+        .modal { background: white; padding: 35px; border-radius: 20px; width: 500px; text-align: center; border-top: 15px solid #3498db; }
+        .modal-btn { margin: 15px; padding: 12px 25px; border: none; border-radius: 10px; cursor: pointer; font-size: 18px; color: white; font-weight: bold; }
+
+        /* 初始選擇畫面 */
+        #setup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2c3e50; z-index: 4000; display: flex; justify-content: center; align-items: center; color: white; }
+        .setup-box { background: white; padding: 50px; border-radius: 30px; text-align: center; color: #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        /* 提示字樣 */
+        .hint-text { margin-top: 10px; font-size: 14px; color: #666; }
+    </style>
+</head>
+<body>
+
+<div id="setup-overlay">
+    <div class="setup-box">
+        <h1 style="font-size: 36px; margin-bottom: 10px;">🏫 社會節慶大富翁</h1>
+        <p style="font-size: 20px; color: #666; margin-bottom: 30px;">請點擊組數開始遊戲</p>
+        <div id="group-buttons" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+            </div>
+    </div>
+</div>
+
+<div class="game-area">
+    <div class="board" id="board">
+        <div class="center-area">
+            <div id="current-player-display">準備中...</div>
+            <div id="dice-display">🎲</div>
+            <button id="roll-btn" onclick="rollDice()">擲骰子</button>
+            <div class="hint-text">(也可以按簡報筆上的按鍵跟Enter鍵)</div>
+        </div>
+    </div>
+</div>
+
+<div class="sidebar">
+    <h2 style="border-bottom: 2px solid #34495e; padding-bottom: 10px;">📊 各組得分 (目標 50)</h2>
+    <div id="scoreboard"></div>
+</div>
+
+<div class="modal-overlay" id="task-modal">
+    <div class="modal">
+        <h2 id="modal-title" style="font-size: 28px; color: #2980b9;">地點</h2>
+        <p id="modal-desc" style="font-size: 24px; margin: 25px 0; color: #2c3e50; line-height: 1.5; font-weight: bold;"></p>
+        <hr>
+        <p style="font-size: 20px;">挑戰點數：<span id="modal-points" style="color:red; font-weight:bold; font-size: 32px;">0</span> 分</p>
+        <button class="modal-btn" style="background:#2ecc71;" onclick="completeTask(true)">挑戰成功 ✅</button>
+        <button class="modal-btn" style="background:#e74c3c;" onclick="completeTask(false)">挑戰失敗 ❌</button>
+    </div>
+</div>
+
+<script>
+    // 內建題目
+    const externalQuestions = {
+        "豐年祭": [
+            { task: "請同組的人一起出來表演出牽手舞蹈動作。", score: 15 },
+            { task: "豐年祭通常是在哪一個季節舉行？", score: 10 },
+            { task: "請問課本裡介紹的是哪一個族的豐年祭？", score: 5 },
+            { task: "原住民舉辦豐年祭的目的最主要是什麼", score: 10 }
+        ],
+        "播種祭": [
+            { task: "播種祭通常是在哪一個季節舉行？？", score: 10 },
+            { task: "播種祭是哪一個族的慶典？", score: 5 },
+            { task: "舉辦播種祭的目的是什麼", score: 10 },
+            { task: "請說明播種祭的過程", score: 15 }
+        ],
+        "除夕": [
+            { task: "除夕夜全家人聚在一起吃的飯稱為什麼？", score: 10 },
+            { task: "傳統習俗中，長輩會在除夕發給晚輩什麼東西以祈求平安？", score: 5 },
+            { task: "請說明除夕這天你們家通常在做些什麼事？", score: 15 },
+            { task: "請說兩個在除夕會說的吉祥話？", score: 10 }
+        ],
+        "端午節": [
+            { task: "端午節是為了紀念哪一位古代的愛國詩人？", score: 10 },
+            { task: "端午節除了吃粽子，還會在門口掛哪什麼來驅邪？", score: 10 },
+            { task: "請說出兩個端午節會做的事或是習俗？", score: 10 },
+            { task: "請同組的人一起出來表演划龍舟。", score: 15 }
+        ],
+        "祖靈祭": [
+            { task: "請說出祖靈祭的目的。", score: 15 },
+            { task: "祖靈祭裡祭品包括什麼東西", score: 10 },
+            { task: "請問祖靈祭是哪一個族的慶典？", score: 5 },
+            { task: "原住民在祖靈祭裡用什麼來裝酒", score: 5 }
+        ],
+        "五年祭": [
+            { task: "請問課本裡介紹的五年祭是哪一個族的慶典？", score: 5 },
+            { task: "刺福球時，勇士們會什麼來刺球？", score: 5 },
+            { task: "請同組的人一起出來表演刺球的動作", score: 15 }
+        ],
+        "中元節": [
+            { task: "中元節是在農曆的幾月幾號？", score: 10 },
+            { task: "這一天大家會準備豐富的祭品祭拜「好兄弟」，這稱為什麼儀式？", score: 10 },
+            { task: "這一天基隆會辦什麼活動？", score: 15 }
+        ],
+        "感恩祭": [
+            { task: "請問感恩祭是哪一個原住民族的活動", score: 10 },
+            { task: "舉辦感恩祭在什麼時候舉辦", score: 5 },
+            { task: "感恩祭通常會準備哪些祭品來祭拜祖靈", score: 15 }
+        ],
+        "大獵祭": [
+            { task: "請問大獵祭是哪一個原住民族的活動", score: 10 },
+            { task: "為什麼狩獵回來要帶花環？", score: 10 },
+            { task: "花環愈多，代表的意義是什麼？", score: 15 },
+            { task: "請三位組員合作：一人扮演獵人，一人扮演獵物，一人扮演獻花環者。", score: 20 }
+        ],
+        "戰祭": [
+            { task: "請問戰祭是哪一個族的慶典？", score: 5 },
+            { task: "請說出戰祭的目的。", score: 15 }
+        ],
+        "清明節": [
+            { task: "請問清明節是哪一天", score: 5 },
+            { task: "清明節那天的習俗是什麼？", score: 15 }
+        ],
+        "元宵節": [
+            { task: "請問元宵節是在哪一天", score: 10 },
+            { task: "元宵節這天除了吃元宵，最有名的夜間活動是什麼？", score: 10 },
+            { task: "燈謎：兩兄弟，手拉手，一個轉，一個留。（猜一文具用品）", score: 15 }
+        ],
+        "招魚祭": [
+            { task: "請問招魚祭大概在什麼時候舉行？", score: 10 },
+            { task: "舉辦招魚祭的目的是什麼", score: 15 },
+            { task: "抓來的飛魚沒有吃完會如何處理", score: 15 }
+        ],
+        "機會": [
+            { task: "請全組起立，大聲說出「我愛臺灣文化」三次！", score: 15 },
+            { task: "恭喜！老師心情好，直接加 20 分！", score: 20 },
+            { task: "請說出臺灣目前官方認定的原住民族共有幾族？", score: 15 }
+        ],
+        "命運": [
+            { task: "請問中秋節要吃什麼水果，答對有 20 分？", score: 20 },
+            { task: "請和老師猜拳，猜拳贏了可得 30 分", score: 30 },
+            { task: "抽到魔王題！請說出五個家鄉的節慶。", score: 10 }
+        ],
+        "教務處": [
+            { task: "請向老師敬禮並說出：「老師辛苦了」，即可獲得 10 分。", score: 10 }
+        ],
+        "學務處": [
+            { task: "因為你在走廊奔跑，請全組在臺前站立反省 30 秒，不扣分但沒得分。", score: 0 }
+        ],
+        "輔導室": [
+            { task: "心情放輕鬆，請全組原地轉三圈，獲得 5 分。", score: 5 }
+        ]
+    };
+
+    const allPlayersData = [
+        { name: "第一組", color: "#FF5733", emoji: "🦊" },
+        { name: "第二組", color: "#33FF57", emoji: "🐼" },
+        { name: "第三組", color: "#3357FF", emoji: "🐨" },
+        { name: "第四組", color: "#F333FF", emoji: "🦁" },
+        { name: "第五組", color: "#FFD700", emoji: "🐯" },
+        { name: "第六組", color: "#33FFF5", emoji: "🐧" }
+    ];
+
+    let players = [];
+    let tilesData = [];
+    let currentPlayerIndex = 0;
+    let isMoving = false;
+    let currentTaskScore = 0;
+
+    // 1. 生成組數按鈕
+    function createSetupButtons() {
+        const container = document.getElementById('group-buttons');
+        container.innerHTML = '';
+        for (let i = 1; i <= 6; i++) {
+            const btn = document.createElement('button');
+            const p = allPlayersData[i-1];
+            btn.innerHTML = `<span style="font-size:30px;">${p.emoji}</span><br>${p.name}`;
+            btn.style.cssText = `background:${p.color}; color:white; padding:20px; border:none; border-radius:15px; cursor:pointer; font-size:18px; font-weight:bold;`;
+            btn.onclick = () => startGame(i);
+            container.appendChild(btn);
+        }
+    }
+
+    // 2. 開始遊戲
+    function startGame(num) {
+        players = allPlayersData.slice(0, num).map(p => ({ ...p, pos: 0, score: 0 }));
+        document.getElementById('setup-overlay').style.display = 'none';
+        initBoardData();
+        renderBoard();
+        renderScoreboard();
+        updatePlayerDisplay();
+        updateTokens();
+    }
+
+    // 3. 初始化地圖資料 (20格)
+    function initBoardData() {
+        const corners = {
+            0: { name: "起點", type: "corner" },
+            5: { name: "教務處", type: "corner" },
+            10: { name: "學務處", type: "corner" },
+            15: { name: "輔導室", type: "corner" }
+        };
+
+        let festivals = [
+            { name: "豐年祭", type: "festival" },
+            { name: "機會", type: "chance" },
+            { name: "播種祭", type: "festival" },
+            { name: "除夕", type: "festival" },
+            { name: "端午節", type: "festival" },
+            { name: "祖靈祭", type: "festival" },
+            { name: "命運", type: "chance" },
+            { name: "五年祭", type: "festival" },
+            { name: "中元節", type: "festival" },
+            { name: "感恩祭", type: "festival" },
+            { name: "機會", type: "chance" },
+            { name: "大獵祭", type: "festival" },
+            { name: "清明節", type: "festival" },
+            { name: "元宵節", type: "festival" },
+            { name: "招魚祭", type: "festival" },
+            { name: "戰祭", type: "festival" }
+        ];
+
+        // 洗牌
+        festivals.sort(() => Math.random() - 0.5);
+
+        tilesData = [];
+        let festivalIdx = 0;
+        for (let i = 0; i < 20; i++) {
+            if (corners[i]) {
+                tilesData.push(corners[i]);
+            } else {
+                tilesData.push(festivals[festivalIdx++]);
+            }
+        }
+    }
+
+    // 4. 繪製棋盤
+    function renderBoard() {
+        const board = document.getElementById('board');
+        const center = board.querySelector('.center-area');
+        board.innerHTML = ''; 
+        board.appendChild(center);
+        
+        tilesData.forEach((tile, index) => {
+            const tileDiv = document.createElement('div');
+            tileDiv.className = `tile ${tile.type}`;
+            tileDiv.id = `tile-${index}`;
+            tileDiv.style.backgroundImage = `url('pic/${tile.name}.png')`;
+
+            let r, c;
+            if (index < 6) { r = 1; c = index + 1; } 
+            else if (index < 10) { r = index - 4; c = 6; } 
+            else if (index < 15) { r = 6; c = 6 - (index - 10); } 
+            else { r = 6 - (index - 15); c = 1; }
+            
+            tileDiv.style.gridRow = r; 
+            tileDiv.style.gridColumn = c;
+            tileDiv.innerHTML = `<div class="tile-name">${tile.name}</div><div class="token-container" id="tokens-${index}"></div>`;
+            board.appendChild(tileDiv);
+        });
+    }
+
+    // 5. 擲骰子
+    function rollDice() {
+        if (isMoving) return;
+        isMoving = true;
+        document.getElementById('roll-btn').disabled = true;
+        
+        let count = 0;
+        const diceChars = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+        const inv = setInterval(() => {
+            document.getElementById('dice-display').innerText = diceChars[Math.floor(Math.random()*6)];
+            if (++count > 12) {
+                clearInterval(inv);
+                const steps = Math.floor(Math.random()*6) + 1;
+                document.getElementById('dice-display').innerText = diceChars[steps-1];
+                movePlayer(steps);
+            }
+        }, 80);
+    }
+
+    // 6. 移動玩家
+    function movePlayer(steps) {
+        let left = steps;
+        const inv = setInterval(() => {
+            players[currentPlayerIndex].pos = (players[currentPlayerIndex].pos + 1) % 20;
+            updateTokens();
+            if (--left === 0) {
+                clearInterval(inv);
+                handleLanding();
+            }
+        }, 400);
+    }
+
+    // 7. 到達格子
+    function handleLanding() {
+        const tile = tilesData[players[currentPlayerIndex].pos];
+        setTimeout(() => {
+            const pool = externalQuestions[tile.name];
+            if (pool && pool.length > 0) {
+                const pick = pool[Math.floor(Math.random() * pool.length)];
+                currentTaskScore = pick.score;
+                document.getElementById('modal-title').innerText = tile.name;
+                document.getElementById('modal-desc').innerText = pick.task;
+                document.getElementById('modal-points').innerText = pick.score;
+                document.getElementById('task-modal').style.display = 'flex';
+            } else {
+                nextTurn();
+            }
+        }, 500);
+    }
+
+    // 8. 完成任務
+    function completeTask(success) {
+        if (success) {
+            players[currentPlayerIndex].score += currentTaskScore;
+        }
+        document.getElementById('task-modal').style.display = 'none';
+        
+        if (players[currentPlayerIndex].score >= 50) {
+            alert(`🏆 恭喜 ${players[currentPlayerIndex].name} 獲勝！`);
+            location.reload();
+        } else {
+            nextTurn();
+        }
+    }
+
+    // 9. 更新畫面
+    function nextTurn() {
+        currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+        updatePlayerDisplay();
+        isMoving = false;
+        document.getElementById('roll-btn').disabled = false;
+    }
+
+    function updatePlayerDisplay() {
+        const p = players[currentPlayerIndex];
+        const d = document.getElementById('current-player-display');
+        d.innerHTML = `輪到：<br>${p.emoji} ${p.name}`;
+        d.style.color = p.color;
+        renderScoreboard();
+    }
+
+    function updateTokens() {
+        document.querySelectorAll('.token-container').forEach(el => el.innerHTML = '');
+        players.forEach(p => {
+            const container = document.getElementById(`tokens-${p.pos}`);
+            if (container) container.innerHTML += `<span style="font-size:32px;">${p.emoji}</span>`;
+        });
+    }
+
+    function renderScoreboard() {
+        const scoreboard = document.getElementById('scoreboard');
+        scoreboard.innerHTML = '';
+        const currentLead = Math.max(...players.map(p => p.score));
+        players.forEach((p, idx) => {
+            const percent = Math.min((p.score / 40) * 100, 100);
+            const isActive = idx === currentPlayerIndex ? 'active-row' : '';
+            const crown = (p.score === currentLead && p.score > 0) ? '👑' : '';
+            scoreboard.innerHTML += `
+                <div style="margin-bottom:15px;">
+                    <div style="font-size:16px; font-weight:bold;">${crown}${p.name}</div>
+                    <div class="bar-container ${isActive}">
+                        <div class="bar-fill" style="width:${percent}%; background:${p.color};">
+                            <span class="bar-avatar">${p.emoji}</span>
+                        </div>
+                        <span class="bar-score">${p.score}</span>
+                    </div>
+                </div>`;
+        });
+    }
+
+    // === 新增：鍵盤事件監聽 ===
+    document.addEventListener('keydown', function(event) {
+        if (event.key === "Enter" || event.key === "PageUp" || event.key === "PageDown") {
+            const taskModal = document.getElementById('task-modal');
+            const rollBtn = document.getElementById('roll-btn');
+            const setupOverlay = document.getElementById('setup-overlay');
+
+            // 如果「設定畫面」已關閉 且 「擲骰按鈕」可以按，Enter 代表「擲骰子」
+            if (setupOverlay.style.display === 'none' && !rollBtn.disabled) {
+                rollDice();
+            }
+        }
+    });
+
+    // 啟動
+    createSetupButtons();
+</script>
+
+</body>
+</html>
