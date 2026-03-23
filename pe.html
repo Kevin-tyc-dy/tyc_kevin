@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>學生快速分組系統</title>
+    <style>
+        :root {
+            --bg-color: #fdfaf6;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-sub: #777777;
+            --girl-color: #d81b60;
+            --girl-bg: #fce4ec;
+            --boy-color: #1e88e5;
+            --boy-bg: #e3f2fd;
+            --primary-color: #e65100;
+            --border-color: #eeeeee;
+        }
+
+        body {
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            margin: 0;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .badge {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 8px 24px;
+            border-radius: 8px;
+            font-size: 24px;
+            font-weight: bold;
+            display: inline-block;
+            transform: rotate(-2deg);
+            margin-bottom: 10px;
+            box-shadow: 2px 4px 10px rgba(230, 81, 0, 0.2);
+        }
+
+        h1 {
+            margin: 10px 0;
+            font-size: 32px;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            color: var(--text-sub);
+            font-size: 14px;
+            letter-spacing: 4px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            width: 100%;
+            max-width: 800px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .gender-title {
+            font-weight: bold;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .count-text {
+            color: var(--text-sub);
+            font-size: 14px;
+            font-weight: normal;
+        }
+
+        .range-toggle, .action-btns {
+            display: flex;
+            gap: 5px;
+            background: #f5f5f5;
+            padding: 4px;
+            border-radius: 20px;
+        }
+
+        .range-btn, .action-btn {
+            border: none;
+            background: transparent;
+            padding: 6px 16px;
+            border-radius: 16px;
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--text-sub);
+            transition: 0.2s;
+        }
+
+        .range-btn.active.girl { background: var(--girl-color); color: white; }
+        .range-btn.active.boy { background: var(--boy-color); color: white; }
+        
+        .action-btn:hover { background: #e0e0e0; }
+
+        .seats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .seat-btn {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            background: white;
+            border: 2px solid #ddd;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 女生按鈕樣式 */
+        .seat-btn.girl { color: var(--girl-color); }
+        .seat-btn.girl.selected {
+            border-color: var(--girl-color);
+            background-color: var(--girl-bg);
+        }
+
+        /* 男生按鈕樣式 */
+        .seat-btn.boy { color: var(--boy-color); }
+        .seat-btn.boy.selected {
+            border-color: var(--boy-color);
+            background-color: var(--boy-bg);
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 30px 0;
+        }
+
+        .settings-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .setting-title {
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toggle-switch {
+            display: flex;
+            background: #f5f5f5;
+            border-radius: 8px;
+            overflow: hidden;
+            width: fit-content;
+        }
+
+        .toggle-btn {
+            padding: 12px 24px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-weight: bold;
+            color: var(--text-sub);
+        }
+
+        .toggle-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .counter {
+            display: flex;
+            align-items: center;
+            background: #fdf5e6;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #fae4c8;
+        }
+
+        .counter button {
+            border: none;
+            background: transparent;
+            padding: 12px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            color: var(--primary-color);
+        }
+
+        .counter input {
+            width: 40px;
+            text-align: center;
+            border: none;
+            background: transparent;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .submit-btn {
+            margin-top: 30px;
+            width: 100%;
+            padding: 15px;
+            background: var(--text-main);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .submit-btn:hover {
+            background: #111;
+        }
+
+        #result-area {
+            margin-top: 30px;
+            width: 100%;
+            max-width: 800px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .group-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-top: 4px solid var(--primary-color);
+        }
+        .group-card h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 16px;
+            text-align: center;
+        }
+        .student-tag {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin: 4px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .student-tag.girl { background: var(--girl-bg); color: var(--girl-color); border: 1px solid var(--girl-color); }
+        .student-tag.boy { background: var(--boy-bg); color: var(--boy-color); border: 1px solid var(--boy-color); }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="badge">數位 P.E</div>
+        <h1>學生快速分組系統</h1>
+        <div class="subtitle">男女合併 ‧ 自訂組數 ‧ 一鍵隨機</div>
+    </div>
+
+    <div class="card">
+        <div class="section-header">
+            <div class="gender-title">
+                ♀ 女生座號 <span class="count-text" id="girl-count">(20/20)</span>
+            </div>
+            <div class="range-toggle">
+                <button class="range-btn active girl" onclick="setPage('girl', 1)">1~20</button>
+                <button class="range-btn girl" onclick="setPage('girl', 2)">21~40</button>
+            </div>
+            <div class="action-btns">
+                <button class="action-btn" onclick="selectAll('girl')">全選</button>
+                <button class="action-btn" onclick="clearAll('girl')">清除</button>
+            </div>
+        </div>
+        <div class="seats-grid" id="girl-grid"></div>
+
+        <div class="section-header">
+            <div class="gender-title">
+                ♂ 男生座號 <span class="count-text" id="boy-count">(20/20)</span>
+            </div>
+            <div class="range-toggle">
+                <button class="range-btn active boy" onclick="setPage('boy', 1)">1~20</button>
+                <button class="range-btn boy" onclick="setPage('boy', 2)">21~40</button>
+            </div>
+            <div class="action-btns">
+                <button class="action-btn" onclick="selectAll('boy')">全選</button>
+                <button class="action-btn" onclick="clearAll('boy')">清除</button>
+            </div>
+        </div>
+        <div class="seats-grid" id="boy-grid"></div>
+
+        <div class="divider"></div>
+
+        <div class="settings-row">
+            <div class="setting-group">
+                <div class="setting-title">👥 分組方式</div>
+                <div class="toggle-switch">
+                    <button class="toggle-btn active" id="mix-btn" onclick="setMethod('mixed')">男女合併</button>
+                    <button class="toggle-btn" id="sep-btn" onclick="setMethod('separate')">男女平均</button>
+                </div>
+            </div>
+            <div class="setting-group">
+                <div class="setting-title">📚 分組數量</div>
+                <div class="counter">
+                    <button onclick="changeGroupCount(-1)">−</button>
+                    <input type="text" id="group-count" value="6" readonly>
+                    <button onclick="changeGroupCount(1)">+</button>
+                </div>
+            </div>
+        </div>
+
+        <button class="submit-btn" onclick="generateGroups()">開始隨機分組</button>
+    </div>
+
+    <div id="result-area"></div>
+
+    <script>
+        // 狀態管理
+        const state = {
+            girlPage: 1, // 1: 1-20, 2: 21-40
+            boyPage: 1,
+            selectedGirls: new Set(Array.from({length: 20}, (_, i) => i + 1)), // 預設選中 1-20
+            selectedBoys: new Set(Array.from({length: 20}, (_, i) => i + 1)),
+            method: 'mixed',
+            groupCount: 6
+        };
+
+        // 初始化渲染
+        function init() {
+            renderSeats('girl');
+            renderSeats('boy');
+            updateCounts();
+        }
+
+        // 渲染座位按鈕
+        function renderSeats(gender) {
+            const grid = document.getElementById(`${gender}-grid`);
+            grid.innerHTML = '';
+            const page = gender === 'girl' ? state.girlPage : state.boyPage;
+            const start = (page - 1) * 20 + 1;
+            const end = page * 20;
+            const selectedSet = gender === 'girl' ? state.selectedGirls : state.selectedBoys;
+
+            for (let i = start; i <= end; i++) {
+                const btn = document.createElement('button');
+                btn.className = `seat-btn ${gender} ${selectedSet.has(i) ? 'selected' : ''}`;
+                btn.textContent = i;
+                btn.onclick = () => toggleSeat(gender, i);
+                grid.appendChild(btn);
+            }
+        }
+
+        // 切換單一座位
+        function toggleSeat(gender, num) {
+            const selectedSet = gender === 'girl' ? state.selectedGirls : state.selectedBoys;
+            if (selectedSet.has(num)) {
+                selectedSet.delete(num);
+            } else {
+                selectedSet.add(num);
+            }
+            renderSeats(gender);
+            updateCounts();
+        }
+
+        // 切換頁面 (1~20 或 21~40)
+        function setPage(gender, page) {
+            if (gender === 'girl') state.girlPage = page;
+            else state.boyPage = page;
+            
+            // 更新頁籤樣式
+            const btns = document.querySelectorAll(`.range-btn.${gender}`);
+            btns.forEach((btn, index) => {
+                if (index + 1 === page) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+            
+            renderSeats(gender);
+        }
+
+        // 全選當前頁面
+        function selectAll(gender) {
+            const page = gender === 'girl' ? state.girlPage : state.boyPage;
+            const start = (page - 1) * 20 + 1;
+            const end = page * 20;
+            const selectedSet = gender === 'girl' ? state.selectedGirls : state.selectedBoys;
+            
+            for (let i = start; i <= end; i++) selectedSet.add(i);
+            renderSeats(gender);
+            updateCounts();
+        }
+
+        // 清除當前頁面
+        function clearAll(gender) {
+            const page = gender === 'girl' ? state.girlPage : state.boyPage;
+            const start = (page - 1) * 20 + 1;
+            const end = page * 20;
+            const selectedSet = gender === 'girl' ? state.selectedGirls : state.selectedBoys;
+            
+            for (let i = start; i <= end; i++) selectedSet.delete(i);
+            renderSeats(gender);
+            updateCounts();
+        }
+
+        // 更新計數顯示
+        function updateCounts() {
+            document.getElementById('girl-count').textContent = `(${state.selectedGirls.size}/40)`;
+            document.getElementById('boy-count').textContent = `(${state.selectedBoys.size}/40)`;
+        }
+
+        // 設定分組方式
+        function setMethod(method) {
+            state.method = method;
+            document.getElementById('mix-btn').classList.toggle('active', method === 'mixed');
+            document.getElementById('sep-btn').classList.toggle('active', method === 'separate');
+        }
+
+        // 更改分組數量
+        function changeGroupCount(delta) {
+            const newVal = state.groupCount + delta;
+            if (newVal >= 2 && newVal <= 20) {
+                state.groupCount = newVal;
+                document.getElementById('group-count').value = newVal;
+            }
+        }
+
+        // 洗牌演算法 (Fisher-Yates)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // 執行分組邏輯
+        function generateGroups() {
+            const resultArea = document.getElementById('result-area');
+            resultArea.innerHTML = '';
+            
+            const numGroups = state.groupCount;
+            const groups = Array.from({length: numGroups}, () => []);
+            
+            let girls = Array.from(state.selectedGirls).map(n => ({num: n, gen: 'girl'}));
+            let boys = Array.from(state.selectedBoys).map(n => ({num: n, gen: 'boy'}));
+
+            if (girls.length === 0 && boys.length === 0) {
+                alert('請至少選擇一位學生！');
+                return;
+            }
+
+            if (state.method === 'mixed') {
+                // 男女合併大亂排
+                let all = shuffleArray([...girls, ...boys]);
+                all.forEach((student, index) => {
+                    groups[index % numGroups].push(student);
+                });
+            } else {
+                // 男女平均分配到各組
+                girls = shuffleArray(girls);
+                boys = shuffleArray(boys);
+                
+                girls.forEach((student, index) => {
+                    groups[index % numGroups].push(student);
+                });
+                boys.forEach((student, index) => {
+                    // 男生從另一端開始發牌，讓各組人數盡量平均
+                    groups[(index + girls.length) % numGroups].push(student);
+                });
+            }
+
+            // 渲染結果
+            groups.forEach((group, index) => {
+                const card = document.createElement('div');
+                card.className = 'group-card';
+                card.innerHTML = `<h3>第 ${index + 1} 組 (${group.length}人)</h3>`;
+                
+                // 為了美觀，組內稍微依座號排序
+                group.sort((a,b) => a.num - b.num);
+                
+                group.forEach(student => {
+                    const tag = document.createElement('span');
+                    tag.className = `student-tag ${student.gen}`;
+                    tag.textContent = `${student.num}號`;
+                    card.appendChild(tag);
+                });
+                
+                resultArea.appendChild(card);
+            });
+        }
+
+        // 啟動程式
+        init();
+    </script>
+</body>
+</html>
