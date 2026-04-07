@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>教師職務公開貼榜系統</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f2ece0;
+  --wood: #7a5230;
+  --wood-dark: #4e3420;
+  --cork: #c9a96e;
+  --text-dark: #2c1a0e;
+  --text-mid: #5a3e28;
+  --text-light: #9e8060;
+  --card-base: #fffde7;
+
+  /* Subject colors */
+  --c-science:    #d4edda; --c-science-b:    #2d6a4f;
+  --c-english:    #d0e8f7; --c-english-b:    #1a4f72;
+  --c-pe:         #fde8cc; --c-pe-b:         #7a3f00;
+  --c-music:      #e8d5f5; --c-music-b:      #5b1f8a;
+  --c-art:        #fde0ec; --c-art-b:        #8a1f4a;
+  --c-minnanese: #fef9c3; --c-minnanese-b: #7a6200;
+  --c-hakka:      #e5e5e5; --c-hakka-b:      #3a3a3a;
+  --c-it:         #ccf2f4; --c-it-b:         #005f6b;
+  --c-admin:      #e8e4dc; --c-admin-b:      #4a3f2f;
+  --c-class:      #ede8e0; --c-class-b:      #3d3228;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100vh;
+  overflow: hidden;
+  font-family: 'Noto Sans TC', sans-serif;
+  background: var(--bg);
+  font-size: 13px;
+}
+
+/* ── HEADER ── */
+#header {
+  height: 52px;
+  background: linear-gradient(135deg, var(--wood-dark), var(--wood));
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 14px;
+  border-bottom: 3px solid var(--cork);
+  flex-shrink: 0;
+}
+#header h1 {
+  font-family: 'Noto Serif TC', serif;
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  white-space: nowrap;
+}
+#header .spacer { flex: 1; }
+#progress-info {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.prog-badge {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.hbtn {
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1.5px solid rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  font-size: 0.75rem;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+.hbtn:hover { background: rgba(255,255,255,0.25); }
+.hbtn.green { background: rgba(39,174,96,0.3); border-color: #6ac18e; }
+.hbtn.green:hover { background: rgba(39,174,96,0.55); }
+
+/* ── ROOT LAYOUT ── */
+#root {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  grid-template-rows: 1fr;
+  height: calc(100vh - 52px);
+  overflow: hidden;
+}
+
+/* ── SIDEBAR ── */
+#sidebar {
+  background: linear-gradient(180deg, #3d2b1f, #2c1a0e);
+  overflow-y: auto;
+  padding: 10px 8px;
+  border-right: 2px solid var(--wood);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+#sidebar h3 {
+  color: var(--cork);
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-align: center;
+  padding-bottom: 7px;
+  border-bottom: 1px solid rgba(201,169,110,0.3);
+  margin-bottom: 7px;
+  font-family: 'Noto Serif TC', serif;
+}
+.st-item {
+  padding: 5px 7px;
+  border-radius: 5px;
+  border-left: 3px solid transparent;
+  margin-bottom: 2px;
+  transition: background 0.15s;
+}
+.st-item:hover { background: rgba(255,255,255,0.06); }
+.st-item.current { background: rgba(241,196,15,0.12); border-left-color: #f1c40f; }
+.st-item.done { opacity: 0.45; border-left-color: #27ae60; }
+.st-row {
+  display: flex;
+  align-items: center;
+  gap: 6px; 
+}
+.st-name {
+  color: #f0e6d3;
+  font-size: 0.82rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.st-meta { color: #9e8060; font-size: 0.62rem; margin-top: 0px; }
+.st-tags { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 0px; }
+.stag {
+  font-size: 0.55rem;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 700;
+  color: #fff;
+}
+.stag-科學  { background: #2d6a4f; }
+.stag-英語  { background: #1a4f72; }
+.stag-體育  { background: #a04000; }
+.stag-音樂  { background: #5b1f8a; }
+.stag-視覺藝術 { background: #8a1f4a; }
+.stag-閩語  { background: #7a6200; }
+.stag-資訊  { background: #005f6b; }
+.stag-自然  { background: #2d6a4f; }
+
+/* ── RIGHT PANEL ── */
+#right-panel {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+}
+
+/* ── CURRENT TEACHER BAR ── */
+#teacher-bar {
+  background: linear-gradient(135deg, #3d2b1f, #5a3e28);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 2px solid var(--cork);
+  min-height: 90px;
+  flex-shrink: 0;
+}
+#teacher-bar .bar-label {
+  color: var(--cork);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  white-space: nowrap;
+}
+
+/* Teacher sticker */
+#teacher-card {
+  background: var(--card-base);
+  border-radius: 9px;
+  padding: 8px 14px;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.22), 0 6px 16px rgba(0,0,0,0.28);
+  cursor: grab;
+  user-select: none;
+  min-width: 140px;
+  border: 2px solid #ddd090;
+  position: relative;
+  transition: transform 0.15s, box-shadow 0.15s;
+  flex-shrink: 0;
+  animation: popIn 0.3s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn {
+  from { opacity:0; transform:scale(0.85) translateY(-10px); }
+  to   { opacity:1; transform:scale(1) translateY(0); }
+}
+#teacher-card::before {
+  content:'';
+  position: absolute;
+  top: -8px; left: 50%; transform: translateX(-50%);
+  width: 12px; height: 12px;
+  background: radial-gradient(circle at 40% 40%, #f8d070, #d4900a);
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+#teacher-card:hover { transform: scale(1.04) rotate(-1deg); }
+#teacher-card.dragging { opacity: 0.65; transform: scale(1.08) rotate(2deg); cursor: grabbing; }
+.tc-name {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--text-dark);
+  line-height: 1;
+  letter-spacing: 0.06em;
+}
+.tc-score { font-size: 0.68rem; color: var(--text-mid); margin-top: 2px; }
+.tc-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
+.tc-note { font-size: 0.65rem; color: #c0392b; font-weight: 700; margin-top: 2px; }
+
+#teacher-bar .bar-hint {
+  color: rgba(255,255,255,0.5);
+  font-size: 1.4rem;
+  line-height: 1.6;
+}
+#teacher-bar .bar-hint strong { color: #f1c40f; }
+#teacher-bar .bar-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+#confirm-btn {
+  padding: 10px 18px;
+  background: linear-gradient(135deg, #27ae60, #1a8040);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 2rem;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.28);
+  transition: all 0.2s;
+  white-space: nowrap;
+  letter-spacing: 0.05em;
+}
+#confirm-btn:hover { transform: translateY(-1px); box-shadow: 0 5px 14px rgba(0,0,0,0.32); }
+#confirm-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+#skip-btn {
+  padding: 9px 14px;
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.65);
+  border: 1.5px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  font-size: 1.4rem;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+#skip-btn:hover { background: rgba(255,255,255,0.18); }
+
+/* ── BOARD ── */
+#board {
+  overflow-y: auto;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.section-hd {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--wood);
+  letter-spacing: 0.15em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.section-hd::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, var(--cork), transparent);
+}
+
+.pos-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+/* ── POSITION CARD ── */
+.pos-card {
+  border-radius: 8px;
+  padding: 7px 9px;
+  border: 2px dashed #c8b48a;
+  min-width: 88px;
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  transition: all 0.18s;
+  position: relative;
+}
+/* colors per type */
+.pos-card.type-自然    { background: var(--c-science);  border-color: var(--c-science-b); }
+.pos-card.type-英語    { background: var(--c-english);  border-color: var(--c-english-b); }
+.pos-card.type-體育    { background: var(--c-pe);       border-color: var(--c-pe-b); }
+.pos-card.type-音樂    { background: var(--c-music);    border-color: var(--c-music-b); }
+.pos-card.type-視覺藝術{ background: var(--c-art);      border-color: var(--c-art-b); }
+.pos-card.type-閩語    { background: var(--c-minnanese);border-color: var(--c-minnanese-b); }
+.pos-card.type-資訊    { background: var(--c-it);       border-color: var(--c-it-b); }
+.pos-card.type-admin   { background: var(--c-admin);    border-color: var(--c-admin-b); }
+.pos-card.type-class   { background: var(--c-class);    border-color: var(--c-class-b); }
+
+.pos-card.drag-valid {
+  border-style: solid;
+  box-shadow: 0 0 0 3px rgba(39,174,96,0.4), 0 0 16px rgba(39,174,96,0.5);
+  transform: scale(1.03);
+}
+.pos-card.drag-invalid {
+  border-style: solid;
+  border-color: #c0392b !important;
+  box-shadow: 0 0 0 3px rgba(192,57,43,0.35), 0 0 14px rgba(192,57,43,0.4);
+  animation: shake 0.28s ease;
+}
+.pos-card.full {
+  opacity: 0.5;
+  filter: grayscale(0.5);
+  cursor: not-allowed;
+}
+@keyframes shake {
+  0%,100%{ transform:translateX(0); }
+  30%{ transform:translateX(-4px); }
+  70%{ transform:translateX(4px); }
+}
+
+.pos-title {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center; 
+}
+/* subject quota bar */
+.quota-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 1px;
+}
+.quota-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.quota-avail  { background: #27ae60; color: #fff; }
+.quota-warn   { background: #e67e22; color: #fff; }
+.quota-full   { background: #c0392b; color: #fff; }
+
+/* stickers list inside pos */
+.pos-stickers {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+.placed-sticker {
+  background: #fffde7;
+  border: 1.5px solid #d4c870;
+  border-radius: 5px;
+  padding: 3px 7px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-family: 'Noto Serif TC', serif;
+  color: var(--text-dark);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 1px 1px 0 rgba(0,0,0,0.1);
+}
+.placed-sticker.confirmed {
+  background: #e8f8f0;
+  border-color: #6ac18e;
+  color: #1e5730;
+}
+.placed-sticker.pending-sticker {
+  background: #fff9c4;
+  border-color: #f0c040;
+  border-style: dashed;
+}
+.remove-btn {
+  width: 13px; height: 13px;
+  background: #c0392b;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  font-size: 0.55rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.15s;
+  font-weight: 900;
+  line-height: 1;
+  margin-left: 4px;
+}
+.remove-btn:hover { transform: scale(1.2); }
+.pos-empty { color: #b0a07a; font-size: 0.62rem; font-style: italic; }
+
+/* ── SUBJECT BIG CARD ── */
+/* subject cards are wider to show quota prominently */
+.pos-card.subject-card {
+  min-width: 130px;
+  min-height: 80px;
+}
+.subject-quota-display {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+.sqd-pill {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.sqd-total { background: rgba(0,0,0,0.1); color: var(--text-dark); }
+.sqd-done  { background: #27ae60; color: #fff; }
+.sqd-left  { background: #e74c3c; color: #fff; }
+.sqd-left.ok { background: #2980b9; }
+
+/* ── TOAST ── */
+#toast {
+  position: fixed;
+  bottom: 20px; left: 50%;
+  transform: translateX(-50%) translateY(70px);
+  z-index: 999;
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  box-shadow: 0 5px 18px rgba(0,0,0,0.3);
+  transition: transform 0.3s cubic-bezier(.34,1.56,.64,1), opacity 0.3s;
+  opacity: 0;
+  pointer-events: none;
+  letter-spacing: 0.04em;
+}
+#toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+#toast.success { background: #27ae60; color: #fff; }
+#toast.error   { background: #c0392b; color: #fff; }
+#toast.warn    { background: #e67e22; color: #fff; }
+
+/* ── MODAL ── */
+#modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(44,26,14,0.88);
+  z-index: 300;
+  align-items: center;
+  justify-content: center;
+}
+#modal.show { display: flex; }
+#modal-box {
+  background: #f5efe3;
+  border-radius: 14px;
+  padding: 24px;
+  max-width: 680px;
+  width: 92vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+#modal-box h2 {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 1.3rem;
+  color: var(--wood-dark);
+}
+#modal-table-wrap {
+  overflow-y: auto;
+  flex: 1;
+  border: 1px solid #ddd0b0;
+  border-radius: 8px;
+}
+#modal-table-wrap table { width: 100%; border-collapse: collapse; }
+#modal-table-wrap th, #modal-table-wrap td {
+  padding: 5px 10px;
+  border-bottom: 1px solid #e8d8b0;
+  font-size: 0.8rem;
+  text-align: left;
+}
+#modal-table-wrap th { background: #e8d8b0; font-weight: 700; position: sticky; top: 0; }
+#modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-thumb { background: var(--cork); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="header">
+  <h1>📋 教師職務公開貼榜系統</h1>
+  <div class="spacer"></div>
+  <div id="progress-info">
+    <div class="prog-badge" id="pb-teacher">教師 0/55</div>
+    <div class="prog-badge" id="pb-pos">職務待填 —</div>
+  </div>
+  <button class="hbtn green" onclick="openModal()">📊 查看結果</button>
+  <button class="hbtn" onclick="exportTxt()">⬇ 匯出</button>
+  <button class="hbtn" onclick="askReset()">🔄 重新開始</button>
+</div>
+
+<!-- ROOT LAYOUT -->
+<div id="root">
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <h3>教師名單</h3>
+    <div id="teacher-list"></div>
+  </div>
+
+  <!-- RIGHT -->
+  <div id="right-panel">
+    <!-- TEACHER BAR -->
+    <div id="teacher-bar">
+      <div class="bar-label">待分配教師</div>
+      <div id="tc-wrap"></div>
+      <div class="bar-hint">
+        <strong>拖曳</strong>姓名貼紙到職務欄位，確認後按 <strong>確認貼上</strong><br>
+        <span style="font-size:1.2rem;opacity:0.6;">★ 彩色欄位為專長職務</span>
+      </div>
+      <div class="bar-actions">
+        <button id="skip-btn" onclick="skipTeacher()">⏭ 略過</button>
+        <button id="confirm-btn" onclick="confirmAssign()">✅ 確認貼上</button>
+      </div>
+    </div>
+    <!-- BOARD -->
+    <div id="board"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- MODAL -->
+<div id="modal">
+  <div id="modal-box">
+    <h2>🎯 目前貼榜結果</h2>
+    <div id="modal-table-wrap"></div>
+    <div id="modal-btns">
+      <button class="hbtn green" onclick="exportTxt()">⬇ 匯出純文字</button>
+      <button class="hbtn" onclick="closeModal()">關閉</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// ★ 教師資料
+// ============================================================
+const teachers = [
+  { order:1,  name:"莊官涖", score:55.00,  skills:[], note:"高年級四年優先" },
+  { order:2,  name:"徐志銘", score:54.00,  skills:["閩語"], note:"高年級四年優先" },
+  { order:3,  name:"廖樂瑤", score:45.00,  skills:[], note:"高年級四年優先" },
+  { order:4,  name:"邱靜怡", score:36.17,  skills:[], note:"高年級四年優先" },
+  { order:5,  name:"林芬年", score:35.92,  skills:[], note:"高年級四年優先" },
+  { order:6,  name:"胡晏禎", score:18.92,  skills:[], note:"高年級四年優先" },
+  { order:7,  name:"賴信良", score:104.00, skills:["資訊"], note:"" },
+  { order:8,  name:"吳建霖", score:93.00,  skills:["體育","英語","資訊"], note:"" },
+  { order:9,  name:"饒秀娟", score:90.00,  skills:["視覺藝術"], note:"" },
+  { order:10, name:"吳新猷", score:88.00,  skills:["體育"], note:"" },
+  { order:11, name:"徐惠玲", score:87.00,  skills:["音樂"], note:"" },
+  { order:12, name:"連怡禎", score:85.00,  skills:[], note:"" },
+  { order:13, name:"張佑瑋", score:84.00,  skills:["自然"], note:"" },
+  { order:14, name:"張靜美", score:84.00,  skills:["自然"], note:"" },
+  { order:15, name:"方雅惠", score:84.00,  skills:[], note:"" },
+  { order:16, name:"林佳伶", score:84.00,  skills:[], note:"" },
+  { order:17, name:"杜榕囿", score:81.58,  skills:["閩語"], note:"" },
+  { order:18, name:"蔡佳男", score:81.00,  skills:["體育"], note:"" },
+  { order:19, name:"姚志宏", score:81.00,  skills:[], note:"" },
+  { order:20, name:"徐欲芳", score:80.00,  skills:[], note:"" },
+  { order:21, name:"蔡鈴靖", score:79.00,  skills:["英語"], note:"" },
+  { order:22, name:"趙麗環", score:78.67,  skills:[], note:"" },
+  { order:23, name:"戴惠貞", score:59.50,  skills:[], note:"" },
+  { order:24, name:"楊月祺", score:56.00,  skills:[], note:"" },
+  { order:25, name:"陳沛儀", score:56.00,  skills:[], note:"" },
+  { order:26, name:"徐鎮旺", score:53.33,  skills:[], note:"" },
+  { order:27, name:"周櫻雀", score:52.00,  skills:["自然","閩語"], note:"" },
+  { order:28, name:"黃子瑋", score:52.00,  skills:[], note:"" },
+  { order:29, name:"楊珮佳", score:50.00,  skills:["英語"], note:"" },
+  { order:30, name:"鄔幼薇", score:48.00,  skills:[], note:"" },
+  { order:31, name:"郭昌瑋", score:48.00,  skills:["體育","資訊"], note:"" },
+  { order:32, name:"楊毓旂", score:48.00,  skills:[], note:"" },
+  { order:33, name:"黃明豐", score:46.00,  skills:["自然"], note:"" },
+  { order:34, name:"范振豐", score:44.00,  skills:["視覺藝術"], note:"" },
+  { order:35, name:"林筱勻", score:43.00,  skills:[], note:"" },
+  { order:36, name:"陳興國", score:39.50,  skills:["自然","體育","英語"], note:"" },
+  { order:37, name:"李靜怡", score:38.92,  skills:[], note:"" },
+  { order:38, name:"陳文興", score:35.00,  skills:[], note:"" },
+  { order:39, name:"石紘聿", score:34.00,  skills:["自然"], note:"" },
+  { order:40, name:"陳孟婉", score:32.00,  skills:[], note:"" },
+  { order:41, name:"廖惠珠", score:31.17,  skills:["閩語"], note:"" },
+  { order:42, name:"吳珈詩", score:31.00,  skills:[], note:"" },
+  { order:43, name:"謝芸頲", score:29.75,  skills:["英語"], note:"" },
+  { order:44, name:"黃善慧", score:28.00,  skills:[], note:"" },
+  { order:45, name:"張文宜", score:27.00,  skills:[], note:"" },
+  { order:46, name:"許欣雅", score:25.00,  skills:[], note:"" },
+  { order:47, name:"張家琪", score:23.92,  skills:["音樂"], note:"" },
+  { order:48, name:"賴詠真", score:22.00,  skills:["英語"], note:"" },
+  { order:49, name:"周世鈞", score:21.00,  skills:["音樂"], note:"" },
+  { order:50, name:"曾紀瑋", score:18.20,  skills:["英語"], note:"" },
+  { order:51, name:"林美滿", score:16.50,  skills:[], note:"" },
+];
+
+// ============================================================
+// ★ 職務設定
+// ============================================================
+// 專長職類及名額
+const subjectQuotas = {
+  自然: 4,
+  英語: 3,
+  體育: 3,
+  音樂: 3,
+  視覺藝術: 2,
+  閩語: 2,
+  資訊: 1,
+};
+
+// 行政職務（無專長限制，每缺一人）
+const adminPositions = [
+  "教學組長","生教組長","衛生組長","事務組長"
+];
+
+// 班級職務（無專長限制）
+const classPositions = [
+  "101","102","103","104","105","106","107","108","109","110",
+  "301","302","303","304","305","306","307","308","309","310",
+  "501","502","503","504","505","506","507","508","509","510","511",
+  "604"
+];
+
+// ============================================================
+// ★ 顏色對應
+// ============================================================
+const subjectColor = {
+  自然:"自然", 英語:"英語", 體育:"體育", 音樂:"音樂",
+  視覺藝術:"視覺藝術", 閩語:"閩語", 資訊:"資訊"
+};
+const subjectTagColor = {
+  自然:"#2d6a4f", 英語:"#1a4f72", 體育:"#a04000", 音樂:"#5b1f8a",
+  視覺藝術:"#8a1f4a", 閩語:"#7a6200", 資訊:"#005f6b"
+};
+
+// ============================================================
+// ★ STATE
+// ============================================================
+// assignments structure:
+//   adminPositions & classPositions: { [posName]: teacherName }
+//   subjectPositions: { [subjectName]: [ {seq, teacherName}, ... ] }
+let state = {
+  currentIndex: 0,
+  adminAssign: {},   // posName -> teacherName
+  classAssign: {},   // posName -> teacherName
+  subjectAssign: {}, // subjectName -> [teacherName, ...]
+  pending: null,     // { type:'admin'|'class'|'subject', pos, subject }
+  skipped: [],
+};
+
+// ---------- persistence ----------
+function saveState() {
+  try { localStorage.setItem('tboard_v4', JSON.stringify(state)); } catch(e){}
+}
+function loadState() {
+  try {
+    const s = localStorage.getItem('tboard_v4');
+    if (s) state = { ...state, ...JSON.parse(s) };
+  } catch(e){}
+}
+loadState();
+
+// ============================================================
+// ★ CORE FUNCTIONS
+// ============================================================
+function getRequiredSkill(posType) {
+  // posType is e.g. "自然","英語",... or null
+  return subjectQuotas[posType] ? posType : null;
+}
+
+function getSubjectAssignedCount(subjectName) {
+  return (state.subjectAssign[subjectName] || []).length;
+}
+
+function getSubjectRemainingCount(subjectName) {
+  return subjectQuotas[subjectName] - getSubjectAssignedCount(subjectName);
+}
+
+function canAssignTeacherToPosition(teacher, posType) {
+  // posType: 'admin'|'class' = always ok
+  // posType = subject name = check skill & quota
+  if (!subjectQuotas[posType]) return { ok: true };
+  if (!teacher.skills.includes(posType))
+    return { ok: false, reason: `此職務需具備【${posType}】專長` };
+  if (getSubjectRemainingCount(posType) <= 0)
+    return { ok: false, reason: `【${posType}】專長缺已額滿` };
+  return { ok: true };
+}
+
+function getAllAssignedTeachers() {
+  const set = new Set();
+  Object.values(state.adminAssign).forEach(n => n && set.add(n));
+  Object.values(state.classAssign).forEach(n => n && set.add(n));
+  Object.values(state.subjectAssign).forEach(arr => arr.forEach(n => set.add(n)));
+  return set;
+}
+
+function isTeacherAssigned(name) {
+  return getAllAssignedTeachers().has(name);
+}
+
+function advanceToNextTeacher() {
+  const assigned = getAllAssignedTeachers();
+  state.currentIndex++;
+  while (state.currentIndex < teachers.length) {
+    if (!assigned.has(teachers[state.currentIndex].name)) break;
+    state.currentIndex++;
+  }
+}
+
+// ============================================================
+// ★ RENDER
+// ============================================================
+function init() {
+  buildSidebar();
+  buildBoard();
+  renderCurrentTeacher();
+  updateProgress();
+}
+
+// --- Sidebar ---
+function buildSidebar() {
+  const el = document.getElementById('teacher-list');
+  el.innerHTML = '';
+  teachers.forEach((t, i) => {
+    const assigned = isTeacherAssigned(t.name);
+    const isCur = i === state.currentIndex;
+    const div = document.createElement('div');
+    div.className = 'st-item' + (assigned ? ' done' : '') + (isCur ? ' current' : '');
+    div.id = `st-${i}`;
+    const tags = t.skills.map(s => `<span class="stag stag-${s}">${s}</span>`).join('');
+    div.innerHTML = `
+      <div class="st-row">
+      <div class="st-name">${assigned ? '✓' : ''} ${t.name}</div>
+      <div class="st-meta">積分 ${t.score}</div>
+      </div>
+      ${tags ? `<div class="st-tags">${tags}</div>` : ''}`;
+    el.appendChild(div);
+  });
+}
+
+// --- Board ---
+function buildBoard() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+
+  // 1. Subject section
+  const subjectSec = document.createElement('div');
+  subjectSec.className = 'section-row';
+  subjectSec.innerHTML = '<div class="section-hd">★ 專長教師職務</div>';
+  const subjectGrid = document.createElement('div');
+  subjectGrid.className = 'pos-grid';
+  Object.keys(subjectQuotas).forEach(sub => {
+    subjectGrid.appendChild(buildSubjectCard(sub));
+  });
+  subjectSec.appendChild(subjectGrid);
+  board.appendChild(subjectSec);
+
+  // 2. Admin section
+  const adminSec = document.createElement('div');
+  adminSec.className = 'section-row';
+  adminSec.innerHTML = '<div class="section-hd">行政職務</div>';
+  const adminGrid = document.createElement('div');
+  adminGrid.className = 'pos-grid';
+  adminPositions.forEach(p => adminGrid.appendChild(buildSimpleCard(p, 'admin')));
+  adminSec.appendChild(adminGrid);
+  board.appendChild(adminSec);
+
+  // 3. Class sections
+  const gradeGroups = [
+    { label:"一年級導師", prefix:"1", positions: classPositions.filter(p => p.startsWith('1')) },
+    { label:"三年級導師", prefix:"3", positions: classPositions.filter(p => p.startsWith('3')) },
+    { label:"五年級導師", prefix:"5", positions: classPositions.filter(p => p.startsWith('5')) },
+    { label:"六年級導師", prefix:"6", positions: classPositions.filter(p => p.startsWith('6')) },
+  ];
+  gradeGroups.forEach(g => {
+    const sec = document.createElement('div');
+    sec.className = 'section-row';
+    sec.innerHTML = `<div class="section-hd">${g.label}</div>`;
+    const grid = document.createElement('div');
+    grid.className = 'pos-grid';
+    g.positions.forEach(p => grid.appendChild(buildSimpleCard(p, 'class')));
+    sec.appendChild(grid);
+    board.appendChild(sec);
+  });
+}
+
+// Subject card (multi-person slot)
+function buildSubjectCard(sub) {
+  const quota = subjectQuotas[sub];
+  const assigned = state.subjectAssign[sub] || [];
+  const done = assigned.length;
+  const left = quota - done;
+  const isFull = left <= 0;
+  const isPending = state.pending && state.pending.type === 'subject' && state.pending.subject === sub;
+
+  const card = document.createElement('div');
+  card.className = `pos-card subject-card type-${sub}` + (isFull ? ' full' : '');
+  card.id = `pos-subject-${sub}`;
+  card.dataset.type = 'subject';
+  card.dataset.subject = sub;
+
+  // quota pills
+  const leftClass = left > 0 ? 'sqd-left ok' : 'sqd-left';
+  let quotaHTML = `
+    <div class="subject-quota-display">
+      <span class="sqd-pill sqd-total">可填${quota}人</span>
+      <span class="sqd-pill sqd-done">已填${done}</span>
+      <span class="sqd-pill ${leftClass}">尚可${left}</span>
+    </div>`;
+
+  // stickers
+  let stickersHTML = '<div class="pos-stickers">';
+  assigned.forEach((name, idx) => {
+    stickersHTML += `<div class="placed-sticker confirmed">✅ ${sub}${idx+1} ${name}</div>`;
+  });
+  if (isPending) {
+    const t = teachers[state.currentIndex];
+    if (t) stickersHTML += `
+      <div class="placed-sticker pending-sticker" id="pend-sub-${sub}">
+        📌 ${sub}${done+1} ${t.name}
+        <button class="remove-btn" onclick="removePending(event)">✕</button>
+      </div>`;
+  } else if (!isFull) {
+    stickersHTML += `<div class="pos-empty">拖曳至此</div>`;
+  }
+  stickersHTML += '</div>';
+
+  card.innerHTML = `<div class="pos-title">${sub}</div>${quotaHTML}${stickersHTML}`;
+
+  if (!isFull) {
+    card.addEventListener('dragover', onDragOver);
+    card.addEventListener('dragleave', onDragLeave);
+    card.addEventListener('drop', onDrop);
+  }
+  return card;
+}
+
+// Simple single-person card (admin / class)
+function buildSimpleCard(posName, type) {
+  const assignedTeacher = (type === 'admin') ? state.adminAssign[posName] : state.classAssign[posName];
+  const isPending = state.pending && state.pending.pos === posName && state.pending.type === type;
+
+  const card = document.createElement('div');
+  card.className = `pos-card type-${type}`;
+  card.id = `pos-${type}-${posName}`;
+  card.dataset.type = type;
+  card.dataset.pos = posName;
+
+  let stickerHTML = '';
+  if (assignedTeacher) {
+    stickerHTML = `<div class="placed-sticker confirmed">✅ ${assignedTeacher}</div>`;
+  } else if (isPending) {
+    const t = teachers[state.currentIndex];
+    stickerHTML = t ? `
+      <div class="placed-sticker pending-sticker">
+        📌 ${t.name}
+        <button class="remove-btn" onclick="removePending(event)">✕</button>
+      </div>` : '';
+  } else {
+    stickerHTML = `<div class="pos-empty">拖曳至此</div>`;
+  }
+
+  card.innerHTML = `<div class="pos-title">${posName}</div><div class="pos-stickers">${stickerHTML}</div>`;
+
+  if (!assignedTeacher) {
+    card.addEventListener('dragover', onDragOver);
+    card.addEventListener('dragleave', onDragLeave);
+    card.addEventListener('drop', onDrop);
+  }
+  return card;
+}
+
+function refreshCard(type, posOrSub) {
+  let old, newCard;
+  if (type === 'subject') {
+    old = document.getElementById(`pos-subject-${posOrSub}`);
+    newCard = buildSubjectCard(posOrSub);
+  } else {
+    old = document.getElementById(`pos-${type}-${posOrSub}`);
+    newCard = buildSimpleCard(posOrSub, type);
+  }
+  if (old && newCard) old.replaceWith(newCard);
+}
+
+// --- Current Teacher ---
+function renderCurrentTeacher() {
+  const wrap = document.getElementById('tc-wrap');
+  wrap.innerHTML = '';
+
+  // Skip already assigned
+  const assigned = getAllAssignedTeachers();
+  while (state.currentIndex < teachers.length && assigned.has(teachers[state.currentIndex].name)) {
+    state.currentIndex++;
+  }
+
+  if (state.currentIndex >= teachers.length) {
+    wrap.innerHTML = `<div style="color:rgba(255,255,255,0.5);font-size:0.85rem;">🎉 所有教師已分配</div>`;
+    document.getElementById('confirm-btn').disabled = true;
+    document.getElementById('skip-btn').disabled = true;
+    return;
+  }
+
+  const t = teachers[state.currentIndex];
+  const tags = t.skills.map(s =>
+    `<span class="stag" style="background:${subjectTagColor[s]||'#555'};font-size:0.62rem;">${s}</span>`
+  ).join('');
+  const noteHTML = t.note ? `<div class="tc-note">📌 ${t.note}</div>` : '';
+
+  const card = document.createElement('div');
+  card.id = 'teacher-card';
+  card.draggable = true;
+  card.innerHTML = `
+    <div class="tc-name">${t.name}</div>
+    <div class="tc-score">序位 ${t.order}　積分 ${t.score}</div>
+    ${tags ? `<div class="tc-tags">${tags}</div>` : '<div class="tc-score" style="color:#aaa;">無專長</div>'}
+    ${noteHTML}`;
+  card.addEventListener('dragstart', onDragStart);
+  card.addEventListener('dragend', onDragEnd);
+  wrap.appendChild(card);
+
+  // Sidebar highlight
+  document.querySelectorAll('.st-item').forEach(e => e.classList.remove('current'));
+  const se = document.getElementById(`st-${state.currentIndex}`);
+  if (se) { se.classList.add('current'); se.scrollIntoView({ block:'nearest', behavior:'smooth' }); }
+
+  updateProgress();
+}
+
+function updateProgress() {
+  const total = teachers.length;
+  const done = getAllAssignedTeachers().size;
+  document.getElementById('pb-teacher').textContent = `教師 ${done}/${total}`;
+
+  let posFilled = 0, posTotal = 0;
+  adminPositions.forEach(p => { posTotal++; if (state.adminAssign[p]) posFilled++; });
+  classPositions.forEach(p => { posTotal++; if (state.classAssign[p]) posFilled++; });
+  Object.entries(subjectQuotas).forEach(([s, q]) => {
+    posTotal += q;
+    posFilled += getSubjectAssignedCount(s);
+  });
+  document.getElementById('pb-pos').textContent = `職務已填 ${posFilled}/${posTotal}`;
+}
+
+// ============================================================
+// ★ DRAG & DROP
+// ============================================================
+function onDragStart(e) {
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', 'teacher');
+  setTimeout(() => document.getElementById('teacher-card')?.classList.add('dragging'), 0);
+}
+function onDragEnd(e) {
+  document.getElementById('teacher-card')?.classList.remove('dragging');
+  document.querySelectorAll('.pos-card').forEach(c => c.classList.remove('drag-valid','drag-invalid'));
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  const card = e.currentTarget;
+  const t = teachers[state.currentIndex];
+  if (!t) return;
+
+  const type = card.dataset.type;
+  const posOrSub = type === 'subject' ? card.dataset.subject : card.dataset.pos;
+
+  // Already confirmed single-slot
+  if ((type === 'admin' && state.adminAssign[posOrSub]) ||
+      (type === 'class' && state.classAssign[posOrSub])) {
+    card.classList.add('drag-invalid'); return;
+  }
+
+  const check = (type === 'subject')
+    ? canAssignTeacherToPosition(t, posOrSub)
+    : { ok: true };
+
+  card.classList.remove('drag-valid','drag-invalid');
+  card.classList.add(check.ok ? 'drag-valid' : 'drag-invalid');
+  e.dataTransfer.dropEffect = check.ok ? 'move' : 'none';
+}
+
+function onDragLeave(e) {
+  const card = e.currentTarget;
+  if (!card.contains(e.relatedTarget)) card.classList.remove('drag-valid','drag-invalid');
+}
+
+function onDrop(e) {
+  e.preventDefault();
+  const card = e.currentTarget;
+  card.classList.remove('drag-valid','drag-invalid');
+  if (e.dataTransfer.getData('text/plain') !== 'teacher') return;
+
+  const t = teachers[state.currentIndex];
+  if (!t) return;
+  const type = card.dataset.type;
+  const posOrSub = type === 'subject' ? card.dataset.subject : card.dataset.pos;
+
+  // Validate
+  if (type === 'subject') {
+    const check = canAssignTeacherToPosition(t, posOrSub);
+    if (!check.ok) { showToast(`❌ ${check.reason}`, 'error'); return; }
+  } else {
+    const existing = type === 'admin' ? state.adminAssign[posOrSub] : state.classAssign[posOrSub];
+    if (existing) { showToast(`❌ 此職務已有教師`, 'error'); return; }
+  }
+
+  // Clear old pending
+  clearPending();
+
+  // Set new pending
+  state.pending = { type, pos: posOrSub, subject: posOrSub };
+  saveState();
+  refreshCard(type, posOrSub);
+  showToast(`📌 已暫放至【${posOrSub}】，請按確認貼上`, 'warn');
+}
+
+function clearPending() {
+  if (!state.pending) return;
+  const old = state.pending;
+  state.pending = null;
+  refreshCard(old.type, old.type === 'subject' ? old.subject : old.pos);
+}
+
+function removePending(e) {
+  e.stopPropagation();
+  clearPending();
+  saveState();
+}
+
+// ============================================================
+// ★ CONFIRM / SKIP
+// ============================================================
+function confirmAssign() {
+  if (!state.pending) { showToast('⚠️ 請先拖曳教師到職務欄位', 'error'); return; }
+
+  const t = teachers[state.currentIndex];
+  const { type, pos, subject } = state.pending;
+
+  if (type === 'subject') {
+    if (!state.subjectAssign[subject]) state.subjectAssign[subject] = [];
+    state.subjectAssign[subject].push(t.name);
+  } else if (type === 'admin') {
+    state.adminAssign[pos] = t.name;
+  } else {
+    state.classAssign[pos] = t.name;
+  }
+  state.pending = null;
+
+  const displayPos = type === 'subject'
+    ? `${subject}${getSubjectAssignedCount(subject)}`
+    : pos;
+
+  saveState();
+  refreshCard(type, type === 'subject' ? subject : pos);
+  buildSidebar();
+  showToast(`✅ ${t.name} 已確認分配至【${displayPos}】`, 'success');
+
+  advanceToNextTeacher();
+  saveState();
+  renderCurrentTeacher();
+  updateProgress();
+}
+
+function skipTeacher() {
+  clearPending();
+  const t = teachers[state.currentIndex];
+  if (!t) return;
+  state.skipped.push(state.currentIndex);
+  state.currentIndex++;
+  const assigned = getAllAssignedTeachers();
+  while (state.currentIndex < teachers.length) {
+    if (!assigned.has(teachers[state.currentIndex].name) && !state.skipped.includes(state.currentIndex)) break;
+    state.currentIndex++;
+  }
+  if (state.currentIndex >= teachers.length && state.skipped.length > 0) {
+    state.currentIndex = state.skipped.shift();
+  }
+  saveState();
+  buildSidebar();
+  renderCurrentTeacher();
+  updateProgress();
+  showToast(`⏭ 略過 ${t.name}`, 'warn');
+}
+
+// ============================================================
+// ★ MODAL / EXPORT
+// ============================================================
+function openModal() {
+  let rows = '';
+  adminPositions.forEach(p => {
+    rows += `<tr><td>行政</td><td>${p}</td><td>${state.adminAssign[p] || '（未分配）'}</td></tr>`;
+  });
+  Object.entries(subjectQuotas).forEach(([sub, quota]) => {
+    const arr = state.subjectAssign[sub] || [];
+    for (let i = 0; i < quota; i++) {
+      rows += `<tr><td>專長</td><td>${sub}${i+1}</td><td>${arr[i] || '（未分配）'}</td></tr>`;
+    }
+  });
+  classPositions.forEach(p => {
+    rows += `<tr><td>導師</td><td>${p}</td><td>${state.classAssign[p] || '（未分配）'}</td></tr>`;
+  });
+  document.getElementById('modal-table-wrap').innerHTML = `
+    <table><thead><tr><th>類別</th><th>職務</th><th>教師</th></tr></thead>
+    <tbody>${rows}</tbody></table>`;
+  document.getElementById('modal').classList.add('show');
+}
+function closeModal() { document.getElementById('modal').classList.remove('show'); }
+
+function exportTxt() {
+  let out = '【教師職務貼榜結果】\n\n';
+  out += '─行政職務─\n';
+  adminPositions.forEach(p => { out += `${p}：${state.adminAssign[p] || '（未分配）'}\n`; });
+  out += '\n─專長職務─\n';
+  Object.entries(subjectQuotas).forEach(([sub, quota]) => {
+    const arr = state.subjectAssign[sub] || [];
+    for (let i = 0; i < quota; i++) out += `${sub}${i+1}：${arr[i] || '（未分配）'}\n`;
+  });
+  out += '\n─班級導師─\n';
+  classPositions.forEach(p => { out += `${p}班：${state.classAssign[p] || '（未分配）'}\n`; });
+
+  const blob = new Blob([out], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '教師職務貼榜結果.txt';
+  a.click();
+}
+
+function askReset() {
+  if (confirm('確定要清空所有貼榜結果並重新開始嗎？')) {
+    localStorage.removeItem('tboard_v4');
+    location.reload();
+  }
+}
+
+// ============================================================
+// ★ TOAST
+// ============================================================
+let toastTimer;
+function showToast(msg, type='success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.className = '', 2800);
+}
+
+// ============================================================
+// ★ START
+// ============================================================
+init();
+</script>
+</body>
+</html>
