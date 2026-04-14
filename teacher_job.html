@@ -25,7 +25,6 @@
   --c-minnanese: #fef9c3; --c-minnanese-b: #7a6200;
   --c-hakka:      #e5e5e5; --c-hakka-b:      #3a3a3a;
   --c-it:         #ccf2f4; --c-it-b:         #005f6b;
-  --c-admin:      #e8e4dc; --c-admin-b:      #4a3f2f;
   --c-class:      #ede8e0; --c-class-b:      #3d3228;
 }
 
@@ -334,7 +333,6 @@ html, body {
 .pos-card.type-視覺藝術{ background: var(--c-art);      border-color: var(--c-art-b); }
 .pos-card.type-閩語    { background: var(--c-minnanese);border-color: var(--c-minnanese-b); }
 .pos-card.type-資訊    { background: var(--c-it);       border-color: var(--c-it-b); }
-.pos-card.type-admin   { background: var(--c-admin);    border-color: var(--c-admin-b); }
 .pos-card.type-class   { background: var(--c-class);    border-color: var(--c-class-b); }
 
 .pos-card.drag-valid {
@@ -656,11 +654,6 @@ const subjectQuotas = {
   資訊: 1,
 };
 
-// 行政職務（無專長限制，每缺一人）
-const adminPositions = [
-  "教學組長","生教組長"
-];
-
 // 班級職務（無專長限制）
 const classPositions = [
   "101","102","103","104","105","106","107","108","109","110",
@@ -688,10 +681,9 @@ const subjectTagColor = {
 //   subjectPositions: { [subjectName]: [ {seq, teacherName}, ... ] }
 let state = {
   currentIndex: 0,
-  adminAssign: {},   // posName -> teacherName
   classAssign: {},   // posName -> teacherName
   subjectAssign: {}, // subjectName -> [teacherName, ...]
-  pending: null,     // { type:'admin'|'class'|'subject', pos, subject }
+  pending: null,     // { type:'class'|'subject', pos, subject }
   skipped: [],
 };
 
@@ -736,7 +728,6 @@ function canAssignTeacherToPosition(teacher, posType) {
 
 function getAllAssignedTeachers() {
   const set = new Set();
-  Object.values(state.adminAssign).forEach(n => n && set.add(n));
   Object.values(state.classAssign).forEach(n => n && set.add(n));
   Object.values(state.subjectAssign).forEach(arr => arr.forEach(n => set.add(n)));
   return set;
@@ -803,17 +794,7 @@ function buildBoard() {
   subjectSec.appendChild(subjectGrid);
   board.appendChild(subjectSec);
 
-  // 2. Admin section
-  const adminSec = document.createElement('div');
-  adminSec.className = 'section-row';
-  adminSec.innerHTML = '<div class="section-hd">行政職務</div>';
-  const adminGrid = document.createElement('div');
-  adminGrid.className = 'pos-grid';
-  adminPositions.forEach(p => adminGrid.appendChild(buildSimpleCard(p, 'admin')));
-  adminSec.appendChild(adminGrid);
-  board.appendChild(adminSec);
-
-  // 3. Class sections
+  // 2. Class sections
   const gradeGroups = [
     { label:"一年級導師", prefix:"1", positions: classPositions.filter(p => p.startsWith('1')) },
     { label:"三年級導師", prefix:"3", positions: classPositions.filter(p => p.startsWith('3')) },
@@ -884,7 +865,7 @@ function buildSubjectCard(sub) {
 
 // Simple single-person card (admin / class)
 function buildSimpleCard(posName, type) {
-  const assignedTeacher = (type === 'admin') ? state.adminAssign[posName] : state.classAssign[posName];
+  const assignedTeacher = state.classAssign[posName];
   const isPending = state.pending && state.pending.pos === posName && state.pending.type === type;
 
   const card = document.createElement('div');
@@ -979,7 +960,6 @@ function updateProgress() {
   document.getElementById('pb-teacher').textContent = `教師 ${done}/${total}`;
 
   let posFilled = 0, posTotal = 0;
-  adminPositions.forEach(p => { posTotal++; if (state.adminAssign[p]) posFilled++; });
   classPositions.forEach(p => { posTotal++; if (state.classAssign[p]) posFilled++; });
   Object.entries(subjectQuotas).forEach(([s, q]) => {
     posTotal += q;
@@ -1011,8 +991,7 @@ function onDragOver(e) {
   const posOrSub = type === 'subject' ? card.dataset.subject : card.dataset.pos;
 
   // Already confirmed single-slot
-  if ((type === 'admin' && state.adminAssign[posOrSub]) ||
-      (type === 'class' && state.classAssign[posOrSub])) {
+  if (type === 'class' && state.classAssign[posOrSub]) {
     card.classList.add('drag-invalid'); return;
   }
 
@@ -1046,7 +1025,7 @@ function onDrop(e) {
     const check = canAssignTeacherToPosition(t, posOrSub);
     if (!check.ok) { showToast(`❌ ${check.reason}`, 'error'); return; }
   } else {
-    const existing = type === 'admin' ? state.adminAssign[posOrSub] : state.classAssign[posOrSub];
+    const existing = state.classAssign[posOrSub];
     if (existing) { showToast(`❌ 此職務已有教師`, 'error'); return; }
   }
 
@@ -1085,8 +1064,6 @@ function confirmAssign() {
   if (type === 'subject') {
     if (!state.subjectAssign[subject]) state.subjectAssign[subject] = [];
     state.subjectAssign[subject].push(t.name);
-  } else if (type === 'admin') {
-    state.adminAssign[pos] = t.name;
   } else {
     state.classAssign[pos] = t.name;
   }
@@ -1133,9 +1110,6 @@ function skipTeacher() {
 // ============================================================
 function openModal() {
   let rows = '';
-  adminPositions.forEach(p => {
-    rows += `<tr><td>行政</td><td>${p}</td><td>${state.adminAssign[p] || '（未分配）'}</td></tr>`;
-  });
   Object.entries(subjectQuotas).forEach(([sub, quota]) => {
     const arr = state.subjectAssign[sub] || [];
     for (let i = 0; i < quota; i++) {
@@ -1154,9 +1128,7 @@ function closeModal() { document.getElementById('modal').classList.remove('show'
 
 function exportTxt() {
   let out = '【教師職務貼榜結果】\n\n';
-  out += '─行政職務─\n';
-  adminPositions.forEach(p => { out += `${p}：${state.adminAssign[p] || '（未分配）'}\n`; });
-  out += '\n─專長職務─\n';
+  out += '─專長職務─\n';
   Object.entries(subjectQuotas).forEach(([sub, quota]) => {
     const arr = state.subjectAssign[sub] || [];
     for (let i = 0; i < quota; i++) out += `${sub}${i+1}：${arr[i] || '（未分配）'}\n`;
